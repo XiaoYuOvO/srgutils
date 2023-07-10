@@ -23,13 +23,7 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -38,7 +32,7 @@ import javax.annotation.Nullable;
 import static net.minecraftforge.srgutils.InternalUtils.Element.*;
 import static net.minecraftforge.srgutils.InternalUtils.*;
 
-class MappingFile implements IMappingFile {
+public class MappingFile implements IMappingFile {
     private Map<String, Package> packages = new HashMap<>();
     private Collection<Package> packagesView = Collections.unmodifiableCollection(packages.values());
     private Map<String, Cls> classes = new HashMap<>();
@@ -46,7 +40,7 @@ class MappingFile implements IMappingFile {
     private Map<String, String> cache = new HashMap<>();
     static final Pattern DESC = Pattern.compile("L(?<cls>[^;]+);");
 
-    MappingFile(){}
+    public MappingFile(){}
     MappingFile(NamedMappingFile source, int from, int to) {
         source.getPackages().forEach(pkg -> addPackage(pkg.getName(from), pkg.getName(to), pkg.meta));
         source.getClasses().forEach(cls -> {
@@ -159,10 +153,10 @@ class MappingFile implements IMappingFile {
             });
         });
 
-        lines.removeIf(e -> e == null);
+        lines.removeIf(Objects::isNull);
 
         if (!format.isOrdered()) {
-            Comparator<String> linesort = (format == Format.SRG || format == Format.XSRG) ? InternalUtils::compareLines : (o1, o2) -> o1.compareTo(o2);
+            Comparator<String> linesort = (format == Format.SRG || format == Format.XSRG) ? InternalUtils::compareLines : String::compareTo;
             Collections.sort(lines, linesort);
         }
 
@@ -214,7 +208,7 @@ class MappingFile implements IMappingFile {
     }
 
     @Override
-    public MappingFile chain(final IMappingFile link) {
+    public MappingFile chain(final IMappingFile link ) {
         return rename(new IRenamer() {
             public String rename(IPackage value) {
                 return link.remapPackage(value.getMapped());
@@ -238,12 +232,76 @@ class MappingFile implements IMappingFile {
                 IMethod mtd = value.getParent();
                 IClass cls = link.getClass(mtd.getParent().getMapped());
                 mtd = cls == null ? null : cls.getMethod(mtd.getMapped(), mtd.getMappedDescriptor());
-                return mtd == null ? value.getMapped() : mtd.remapParameter(value.getIndex(), value.getMapped());
+                if (mtd == null) {
+                    return value.getMapped();
+                } else {
+                    String s = mtd.remapParameter(value.getIndex(), value.getMapped());
+                    return s.isEmpty() ? value.getOriginal() : s;
+                }
             }
         });
     }
 
-    abstract class Node implements INode {
+    public MappingFile removeAllMapped(IMappingFile mapping){
+        for (IClass aClass : mapping.getClasses()) {
+            Cls cls = this.classes.get(aClass.getMapped());
+            if (cls != null){
+                for (IField field : aClass.getFields()) {
+                    cls.fields.remove(field.getMapped());
+                }
+                for (IMethod method : aClass.getMethods()) {
+                    cls.methods.remove(method.getMapped() + method.getMappedDescriptor());
+                }
+            }
+        }
+        return this;
+    }
+
+
+    public MappingFile removeAllOriginal(IMappingFile mapping){
+        for (IClass aClass : mapping.getClasses()) {
+            Cls cls = this.classes.get(aClass.getOriginal());
+            if (cls != null){
+                for (IField field : aClass.getFields()) {
+                    cls.fields.remove(field.getOriginal());
+                }
+                for (IMethod method : aClass.getMethods()) {
+                    cls.methods.remove(method.getOriginal() + method.getDescriptor());
+                }
+            }
+        }
+        return this;
+    }
+
+    @Override
+    public IMappingFile merge(IMappingFile another) {
+        for (IClass aClass : another.getClasses()) {
+            if (this.classes.containsKey(aClass.getOriginal())){
+                Cls cls = this.classes.get(aClass.getOriginal());
+                for (IMethod method : aClass.getMethods()) {
+                    if ((cls.getMethod(method.getOriginal(),method.getDescriptor()) == null)){
+                        cls.addMethod(method.getOriginal(),method.getDescriptor(),method.getMapped(),method.getMetadata());
+                    }
+                }
+                for (IField field : aClass.getFields()) {
+                    if (cls.getField(field.getOriginal()) == null){
+                        cls.addField(field.getOriginal(),field.getMapped(),field.getDescriptor(),field.getMetadata());
+                    }
+                }
+            }else {
+                Cls cls = this.addClass(aClass.getOriginal(), aClass.getMapped(), aClass.getMetadata());
+                for (IField field : aClass.getFields()) {
+                    cls.addField(field.getOriginal(), field.getMapped(), field.getDescriptor(), field.getMetadata());
+                }
+                for (IMethod method : aClass.getMethods()) {
+                    cls.addMethod(method.getOriginal(),method.getDescriptor(), method.getMapped(), method.getMetadata());
+                }
+            }
+        }
+        return this;
+    }
+
+    abstract static class Node implements INode {
         private final String original;
         private final String mapped;
         private final Map<String, String> metadata;
@@ -399,7 +457,7 @@ class MappingFile implements IMappingFile {
             }
 
             @Override
-            @Nullable
+             @Nullable
             public String write(Format format, boolean reversed) {
                 if (format != Format.TSRG2 && format.hasFieldTypes() && this.desc == null)
                     throw new IllegalStateException("Can not write " + format.name() + " format, field is missing descriptor");
@@ -443,6 +501,11 @@ class MappingFile implements IMappingFile {
             private Method(String original, String desc, String mapped, Map<String, String> metadata) {
                 super(original, mapped, metadata);
                 this.desc = desc;
+            }
+
+            @Override
+            public int hashCode() {
+                return Objects.hash(desc, params, paramsView);
             }
 
             @Override

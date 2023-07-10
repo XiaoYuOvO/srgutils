@@ -98,6 +98,9 @@ public interface IMappingFile {
     IMappingFile reverse();
     IMappingFile rename(IRenamer renamer);
     IMappingFile chain(IMappingFile other);
+    IMappingFile removeAllMapped(IMappingFile mapping);
+    IMappingFile removeAllOriginal(IMappingFile mapping);
+    IMappingFile merge(IMappingFile another);
 
     public interface INode {
         String getOriginal();

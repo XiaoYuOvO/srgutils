@@ -9,18 +9,18 @@ buildscript {
 
 plugins {
     id 'java'
-    id 'eclipse'
-    id 'maven-publish'
-    id 'net.minecrell.licenser' version '0.4.1'
+//    id 'eclipse'
+//    id 'maven-publish'
+//    id 'net.minecrell.licenser' version '0.4.1'
     id 'org.ajoberstar.grgit' version '4.1.0'
     id 'com.github.ben-manes.versions' version '0.36.0'
 }
 
 group 'net.minecraftforge'
-version = gitVersion()
-println('Version: ' + version)
+//version = gitVersion()
+//println('Version: ' + version)
 
-java.toolchain.languageVersion = JavaLanguageVersion.of(8)
+java.toolchain.languageVersion = JavaLanguageVersion.of(17)
 
 def gitVersion() {
     def raw = grgit.describe(longDescr: true, tags:true)
@@ -48,12 +48,12 @@ test {
     useJUnitPlatform()
 }
 
-license {
-    header = file('LICENSE-header.txt')
-    ext {
-        project = 'SRG Utils'
-    }
-}
+//license {
+//    header = file('LICENSE-header.txt')
+//    ext {
+//        project = 'SRG Utils'
+//    }
+//}
 
 dependencies {
     testImplementation('org.junit.jupiter:junit-jupiter:5.7.0')
@@ -72,63 +72,63 @@ artifacts {
     archives sourcesJar
 }
 
-publishing {
-    publications {
-        mavenJava(MavenPublication) {
-            if (CHANGELOG.exists()) {
-                artifact(CHANGELOG) {
-                    classifier = 'changelog'
-                }
-            }
-            artifact jar
-            artifact sourcesJar
-            pom {
-                name = 'SRG Utils'
-                description = 'Library for managing java obfusication mappings in various formats.'
-                url = 'https://github.com/MinecraftForge/SrgUtils'
-                scm {
-                    url = 'https://github.com/MinecraftForge/SrgUtils'
-                    connection = 'scm:git:git://github.com/MinecraftForge/SrgUtils.git'
-                    developerConnection = 'scm:git:git@github.com:MinecraftForge/SrgUtils.git'
-                }
-                issueManagement {
-                    system = 'github'
-                    url = 'https://github.com/MinecraftForge/SrgUtils/issues'
-                }
-
-                licenses {
-                    license {
-                        name = 'LGPLv2.1'
-                        url = 'https://www.gnu.org/licenses/old-licenses/lgpl-2.1.txt'
-                    }
-                }
-
-                developers {
-                    developer {
-                        id = 'LexManos'
-                        name = 'LexManos'
-                    }
-                }
-            }
-        }
-    }
-    repositories {
-        maven {
-            if (System.env.MAVEN_USER) {
-                url 'https://maven.minecraftforge.net/'
-                authentication {
-                    basic(BasicAuthentication)
-                }
-                credentials {
-                    username = System.env.MAVEN_USER ?: 'not'
-                    password = System.env.MAVEN_PASSWORD ?: 'set'
-                }
-            } else {
-                url 'file://' + rootProject.file('repo').getAbsolutePath()
-            }
-        }
-    }
-}
+//publishing {
+//    publications {
+//        mavenJava(MavenPublication) {
+//            if (CHANGELOG.exists()) {
+//                artifact(CHANGELOG) {
+//                    classifier = 'changelog'
+//                }
+//            }
+//            artifact jar
+//            artifact sourcesJar
+//            pom {
+//                name = 'SRG Utils'
+//                description = 'Library for managing java obfusication mappings in various formats.'
+//                url = 'https://github.com/MinecraftForge/SrgUtils'
+//                scm {
+//                    url = 'https://github.com/MinecraftForge/SrgUtils'
+//                    connection = 'scm:git:git://github.com/MinecraftForge/SrgUtils.git'
+//                    developerConnection = 'scm:git:git@github.com:MinecraftForge/SrgUtils.git'
+//                }
+//                issueManagement {
+//                    system = 'github'
+//                    url = 'https://github.com/MinecraftForge/SrgUtils/issues'
+//                }
+//
+//                licenses {
+//                    license {
+//                        name = 'LGPLv2.1'
+//                        url = 'https://www.gnu.org/licenses/old-licenses/lgpl-2.1.txt'
+//                    }
+//                }
+//
+//                developers {
+//                    developer {
+//                        id = 'LexManos'
+//                        name = 'LexManos'
+//                    }
+//                }
+//            }
+//        }
+//    }
+//    repositories {
+//        maven {
+//            if (System.env.MAVEN_USER) {
+//                url 'https://maven.minecraftforge.net/'
+//                authentication {
+//                    basic(BasicAuthentication)
+//                }
+//                credentials {
+//                    username = System.env.MAVEN_USER ?: 'not'
+//                    password = System.env.MAVEN_PASSWORD ?: 'set'
+//                }
+//            } else {
+//                url 'file://' + rootProject.file('repo').getAbsolutePath()
+//            }
+//        }
+//    }
+//}
 
 dependencyUpdates.resolutionStrategy {
     componentSelection { rules ->
