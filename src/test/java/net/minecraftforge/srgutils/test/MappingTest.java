@@ -25,6 +25,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import net.minecraftforge.srgutils.IRenamer;
+import net.minecraftforge.srgutils.MappingFile;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -61,6 +62,23 @@ public class MappingTest {
 
     @Test
     void toSrg() throws IOException {
+        var mappingDir = "D:\\IDEAProjects\\MITE1.18.2\\toolchain\\mappings\\";
+        var lambdaMatch = new File(mappingDir + "lambda_match.tiny");
+        var yarn_official = new File(mappingDir + "yarn-official.tiny");
+        var manual = new File(mappingDir + "manual_mappings.tiny");
+        String lambdaReobfMapping = mappingDir + "lambda_yarn_official.tiny";
+        String officialToIntermediary = "D:\\IDEAProjects\\MITE1.18.2\\toolchain\\mappings.tiny";
+//        var out = new File(lambdaReobfMapping);
+//        var lambdas = IMappingFile.load(lambdaMatch);
+//        var yarnToOfficial = IMappingFile.load(yarn_official);
+//        var manualMapping = IMappingFile.load(manual);
+//        lambdas.chain(yarnToOfficial).merge(yarnToOfficial).merge(manualMapping).write(out.toPath(), IMappingFile.Format.TINY, false);
+        String autoObfuscateMapping = mappingDir + "auto_obfuscate.tiny";
+        String officialToIntermediaryMITE = mappingDir + "official_intermediary_MITE.tiny";
+        IMappingFile.load(new File(lambdaReobfMapping))
+                .merge(IMappingFile.load(new File(autoObfuscateMapping)))
+                .chainToNamed(IMappingFile.load(new File(officialToIntermediaryMITE)),"named","official", "intermediary")
+                .write(new File(mappingDir + "yarn-1.18.2+build.4-MITE-v0.6.5-beta.tiny").toPath(), IMappingFile.Format.TINY, "official","intermediary","named");
 //        IMappingFile lambdas = IMappingFile.load(Files.newInputStream(Paths.get("F:\\IDEAProjects\\SpecialSource\\lambda_match.srg")));
 //        IMappingFile intermediaryToOffical = IMappingFile.load(Files.newInputStream(Paths.get("F:\\IDEAProjects\\MITE1.18\\deofficial\\intermediary-official.tsrg")));
 //        lambdas.write(Paths.get("F:\\IDEAProjects\\SpecialSource\\lambda_match.tiny"),Format.TINY,false);
@@ -68,12 +86,12 @@ public class MappingTest {
 //        IMappingFile officialToIntermediary = IMappingFile.load(Files.newInputStream(Paths.get("F:\\IDEAProjects\\MITE1.18\\deofficial\\official-intermediary.tiny")));
 //        IMappingFile yarnToOfficial = IMappingFile.load(Files.newInputStream(Paths.get("F:\\IDEAProjects\\MITE1.18\\deofficial\\yarn-official.tiny")));
 //        IMappingFile intermediaryToYarn = IMappingFile.load(Files.newInputStream(Paths.get("F:\\IDEAProjects\\MITE1.18\\deofficial\\intermediary-yarn.tiny")));
-        IMappingFile intermediaryToYarn_1_18_2 = IMappingFile.load(Files.newInputStream(Paths.get("F:\\.gradle\\caches\\fabric-loom\\1.18.2\\net.fabricmc.yarn.1_18_2.1.18.2+build.3-v2\\mappings-base.tiny")));
-        IMappingFile officialToIntermediary_1_18_2 = IMappingFile.load(Files.newInputStream(Paths.get("F:\\.gradle\\caches\\fabric-loom\\1.18.2\\intermediary-v2.tiny")));
+//        IMappingFile intermediaryToYarn_1_18_2 = IMappingFile.load(Files.newInputStream(Paths.get("F:\\.gradle\\caches\\fabric-loom\\1.18.2\\net.fabricmc.yarn.1_18_2.1.18.2+build.3-v2\\mappings-base.tiny")));
+//        IMappingFile officialToIntermediary_1_18_2 = IMappingFile.load(Files.newInputStream(Paths.get("F:\\.gradle\\caches\\fabric-loom\\1.18.2\\intermediary-v2.tiny")));
 //        officialToIntermediary_1_18_2.chain(intermediaryToYarn_1_18_2).write();
 
 //        officialToIntermediary.chain(intermediaryToYarn_1_18_2).write((Paths.get("F:\\IDEAProjects\\MITE1.18\\deofficial\\offical-yarn_1.18.2.tsrg")),Format.TSRG,false);
-        officialToIntermediary_1_18_2.chain(intermediaryToYarn_1_18_2).reverse().write(Paths.get("F:\\IDEAProjects\\MITE1.18.2\\toolchain\\yarn-official.tiny"),Format.TINY,false);
+//        officialToIntermediary_1_18_2.chain(intermediaryToYarn_1_18_2).reverse().write(Paths.get("F:\\IDEAProjects\\MITE1.18.2\\toolchain\\yarn-official.tiny"),Format.TINY,false);
 //        officialToIntermediary_1_18_2.chain(intermediaryToYarn_1_18_2).write(Paths.get("F:\\IDEAProjects\\MITE1.18.2\\toolchain\\official-yarn.tiny"),Format.TINY,false);
 //        lambdasTiny.merge(yarnToOfficial).write(Path.of("./lambda_yarnToOfficial.tiny"),Format.TINY,false);
 //        intermediaryToYarn.reverse().chain(officialToIntermediary_1_18_2.reverse()).write(Paths.get("F:\\IDEAProjects\\MITE1.18.2\\deofficial\\yarn-official-1.18.2.tiny"),Format.TINY,false);

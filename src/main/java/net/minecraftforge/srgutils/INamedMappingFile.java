@@ -39,8 +39,6 @@ public interface INamedMappingFile {
         return InternalUtils.loadNamed(in);
     }
 
-    IMappingFile merge(IMappingFile another);
-
     List<String> getNames();
     IMappingFile getMap(String from, String to);
 

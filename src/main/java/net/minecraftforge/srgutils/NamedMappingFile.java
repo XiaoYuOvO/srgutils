@@ -23,14 +23,7 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.stream.Stream;
 
@@ -102,7 +95,7 @@ class NamedMappingFile implements INamedMappingFile, IMappingBuilder {
 
 
         List<String> lines = new ArrayList<>();
-        Comparator<Named> sort = (a,b) -> a.getName(indexes[0]).compareTo(b.getName(indexes[0]));
+        Comparator<Named> sort = Comparator.comparing(a -> a.getName(indexes[0]));
 
         getPackages().sorted(sort).forEachOrdered(pkg -> {
             lines.add(pkg.write(format, indexes));
@@ -128,10 +121,10 @@ class NamedMappingFile implements INamedMappingFile, IMappingBuilder {
             });
         });
 
-        lines.removeIf(e -> e == null);
+        lines.removeIf(Objects::isNull);
 
         if (!format.isOrdered()) {
-            Comparator<String> linesort = (format == SRG || format == XSRG) ? InternalUtils::compareLines : (o1, o2) -> o1.compareTo(o2);
+            Comparator<String> linesort = (format == SRG || format == XSRG) ? InternalUtils::compareLines : String::compareTo;
             Collections.sort(lines, linesort);
         }
 

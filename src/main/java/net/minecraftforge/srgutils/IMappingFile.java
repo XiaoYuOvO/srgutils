@@ -49,7 +49,7 @@ public interface IMappingFile {
         TSRG2(true,  true,  true ),
         PG   (true,  true,  false),
         TINY1(false, true,  true ),
-        TINY (true,  true,  false)
+        TINY (true,  true,  true)
         ;
 
         private final boolean ordered;
@@ -101,6 +101,8 @@ public interface IMappingFile {
     IMappingFile removeAllMapped(IMappingFile mapping);
     IMappingFile removeAllOriginal(IMappingFile mapping);
     IMappingFile merge(IMappingFile another);
+    IMappingFile mergeWithReplace(IMappingFile another);
+    INamedMappingFile chainToNamed(IMappingFile other,String srcName, String intermediaryName, String targetNam);
 
     public interface INode {
         String getOriginal();

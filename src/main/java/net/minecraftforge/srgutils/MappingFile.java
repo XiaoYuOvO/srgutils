@@ -26,6 +26,7 @@ import java.nio.file.Path;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 
@@ -271,6 +272,66 @@ public class MappingFile implements IMappingFile {
             }
         }
         return this;
+    }
+
+    @Override
+    public IMappingFile mergeWithReplace(IMappingFile another) {
+        for (IClass thisClass : another.getClasses()) {
+            if (this.classes.containsKey(thisClass.getOriginal())){
+                Cls otherClass = this.classes.get(thisClass.getOriginal());
+                for (IMethod method : thisClass.getMethods()) {
+                    List<MappingFile.Cls.Method> collect = otherClass.getMethods()
+                            .stream()
+                            .filter(method1 -> Objects.equals(method1.getMapped(), method.getMapped()) && Objects.equals(method1.getDescriptor(), method.getDescriptor()))
+                            .toList();
+                    if (!collect.isEmpty()){
+                        for (Cls.Method method1 : collect) {
+                            otherClass.methods.remove(method1.getOriginal() + method1.getDescriptor());
+                        }
+                    }
+                    if ((otherClass.getMethod(method.getOriginal(),method.getDescriptor()) == null)){
+                        otherClass.addMethod(method.getOriginal(),method.getDescriptor(),method.getMapped(),method.getMetadata());
+                    }
+                }
+                for (IField field : thisClass.getFields()) {
+                    if (otherClass.getField(field.getOriginal()) == null){
+                        otherClass.addField(field.getOriginal(),field.getMapped(),field.getDescriptor(),field.getMetadata());
+                    }else {
+                        otherClass.fields.remove(field.getOriginal());
+                        otherClass.addField(field.getOriginal(),field.getMapped(),field.getDescriptor(),field.getMetadata());
+                    }
+                }
+            }else {
+                Cls cls = this.addClass(thisClass.getOriginal(), thisClass.getMapped(), thisClass.getMetadata());
+                for (IField field : thisClass.getFields()) {
+                    cls.addField(field.getOriginal(), field.getMapped(), field.getDescriptor(), field.getMetadata());
+                }
+                for (IMethod method : thisClass.getMethods()) {
+                    cls.addMethod(method.getOriginal(),method.getDescriptor(), method.getMapped(), method.getMetadata());
+                }
+            }
+        }
+        return this;
+    }
+
+    @Override
+    public INamedMappingFile chainToNamed(IMappingFile other,String srcName, String intermediaryName, String targetName) {
+        NamedMappingFile namedMappingFile = new NamedMappingFile(srcName, intermediaryName, targetName);
+        for (Cls aClass : this.getClasses()) {
+            IClass targetClass = other.getClass(aClass.getMapped());
+            NamedMappingFile.Cls cls = namedMappingFile.addClass(aClass.getOriginal(),
+                    aClass.getMapped(),
+                    targetClass == null ? aClass.getMapped() : targetClass.getMapped());
+            for (Cls.Method method : aClass.getMethods()) {
+                IMethod targetMethod = targetClass != null ? targetClass.getMethod(method.getMapped(), method.getMappedDescriptor()) : null;
+                cls.method(method.getDescriptor(), method.getOriginal(), method.getMapped(), targetMethod == null ? method.getOriginal() : targetMethod.getMapped());
+            }
+            for (Cls.Field field : aClass.getFields()) {
+                IField targetField = targetClass != null ? targetClass.getField(field.getMapped()) : null;
+                cls.field(field.getOriginal(), field.getMapped(), targetField == null ? field.getOriginal() : targetField.getMapped()).descriptor(field.getDescriptor());
+            }
+        }
+        return namedMappingFile;
     }
 
     @Override
